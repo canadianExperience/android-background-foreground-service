@@ -9,22 +9,28 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.me.android_service.CHANNEL_ID
 import com.me.android_service.MainActivity
 import com.me.android_service.R
-import kotlin.random.Random
 
 @RequiresApi(Build.VERSION_CODES.O)
 class MyForegroundService: Service() {
+
+    private lateinit var myThread: Thread
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Thread {
-            while (true) {
-                Log.e("SERVICE", "Foreground(Notifications) Service is running...")
-                sendNotifications()
-                Thread.sleep(5000)
+        myThread = Thread {
+            try {
+                while (!Thread.currentThread().isInterrupted) {
+                    Log.e("SERVICE", "Foreground(Notifications) Service is running...")
+                    sendNotifications()
+                    Thread.sleep(5000)
+                }
+            } catch (e: InterruptedException){
+                e.printStackTrace()
             }
-        }.start()
+        }
+        myThread.start()
 
         return super.onStartCommand(intent, flags, startId)
     }
@@ -35,11 +41,13 @@ class MyForegroundService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        myThread.interrupt()
         stopSelf()
     }
 
     private fun sendNotifications(){
-        val id = Random.nextInt(1001)
+        val id = (1..1001).random()
         val intent = Intent(this, MainActivity::class.java)
         val flags = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         val pendingIntent = PendingIntent.getActivity(
@@ -49,18 +57,6 @@ class MyForegroundService: Service() {
             flags
         )
 
-        val actionIntent = Intent(this, MainActivity::class.java).apply {
-            action = "Stop"
-            putExtra("stop_notifications", true)
-        }
-        val actionFlags = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-        val actionPendingIntent = PendingIntent.getActivity(
-            this,
-            id,
-            actionIntent,
-            actionFlags
-        )
-
         val builder = Notification.Builder(this, CHANNEL_ID).apply {
             setContentText("Foreground Service is running every 5 sec")
             setContentTitle("Notifications enabled with id: $id")
@@ -68,10 +64,8 @@ class MyForegroundService: Service() {
             setContentIntent(pendingIntent)
             setCategory(NotificationCompat.CATEGORY_MESSAGE)
             setAutoCancel(true)
-            addAction(R.drawable.ic_notifications_off, "Stop", actionPendingIntent)
         }
-        with(NotificationManagerCompat.from(this)) {
-            notify(id, builder.build())
-        }
+
+        startForeground(id, builder.build())
     }
 }

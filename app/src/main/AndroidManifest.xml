@@ -24,7 +24,10 @@
         </activity>
 
         <service android:name=".services.MyBackgroundService" />
-        <service android:name=".services.MyForegroundService" />
+        <service
+            android:name=".services.MyForegroundService"
+            android:exported="false"
+            />
         <receiver
             android:name=".broadcastreceiver.BootBroadcastReceiver"
             android:exported="false">

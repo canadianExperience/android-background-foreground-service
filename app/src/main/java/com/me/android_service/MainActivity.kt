@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.me.android_service.databinding.ActivityMainBinding
-import com.me.android_service.services.MyBackgroundService
 import com.me.android_service.services.MyForegroundService
 
 
@@ -20,20 +19,20 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        val backgroundIntent = Intent(this, MyBackgroundService::class.java)
-        startService(backgroundIntent)
+//        val backgroundIntent = Intent(this, MyBackgroundService::class.java)
+//        startService(backgroundIntent)
 
         val foregroundIntent = Intent(this, MyForegroundService::class.java)
 
-        if(!hasNotificationServiceRunning()){
-            startForegroundService(foregroundIntent)
-        }
-
         binding.stopBtn.setOnClickListener {
-            //Stop notifications
             stopService(foregroundIntent)
         }
 
+        binding.startBtn.setOnClickListener {
+            if(!hasNotificationServiceRunning()) {
+                startForegroundService(foregroundIntent)
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -9,12 +9,15 @@ class MyBackgroundService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
        Thread {
-           while (true) {
-               Log.e("SERVICE", "Background Service is running...")
-               Thread.sleep(2000)
+           try {
+               while (!Thread.currentThread().isInterrupted) {
+                   Log.e("SERVICE", "Background Service is running...")
+                   Thread.sleep(5000)
+               }
+           } catch (e: InterruptedException){
+               e.printStackTrace()
            }
        }.start()
-
 
         return super.onStartCommand(intent, flags, startId)
     }
